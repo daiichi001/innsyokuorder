@@ -1,4 +1,4 @@
-"""年齢・性別からおすすめ料理を選ぶ（ルールベースのスコアリング）"""
+"""年齢・性別・アレルギーからおすすめ料理を選ぶ（ルールベースのスコアリング）"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,8 +13,8 @@ AGE_GROUPS = (
     (12, "お子さま", {"kids": 3, "kids_only": 2, "sweet": 1}),
     (19, "10代", {"teen": 3, "hearty": 1, "share": 1}),
     (39, "20〜30代", {"hearty": 2, "alcohol": 2, "alcohol_pair": 1, "share": 1}),
-    (59, "40〜50代", {"healthy": 2, "alcohol": 1, "alcohol_pair": 2, "light": 1}),
-    (999, "60代以上", {"senior": 3, "healthy": 1, "light": 1}),
+    (59, "40〜50代", {"healthy": 2, "alcohol_pair": 2, "alcohol": 1, "light": 1, "premium": 1}),
+    (999, "60代以上", {"senior": 3, "healthy": 1, "light": 1, "premium": 1}),
 )
 
 GENDER_WEIGHTS = {
@@ -26,15 +26,16 @@ TAG_REASONS = {
     "kids_only": "お子さま限定",
     "kids": "お子さまに人気",
     "teen": "10代に人気",
-    "hearty": "ボリューム満点",
-    "share": "みんなでシェアできる",
+    "hearty": "食べごたえ満点",
+    "share": "みんなでつまめる",
     "alcohol": "お酒好きの方に",
-    "alcohol_pair": "お酒と相性抜群",
+    "alcohol_pair": "お酒のおともに",
     "healthy": "ヘルシー",
-    "light": "軽めで食べやすい",
+    "light": "あっさり食べやすい",
     "senior": "やさしい味わい",
     "sweet": "甘いもの好きの方に",
     "protein": "高たんぱく",
+    "premium": "旬の高級ネタ",
 }
 
 
@@ -60,8 +61,9 @@ def is_allowed(item: MenuItem, age: int) -> bool:
     return True
 
 
-def recommend(age: int, gender: str) -> list[Recommendation]:
-    """カテゴリごとに最もスコアの高い1品を返す（前菜・メイン・ドリンク・デザートの順）。"""
+def recommend(age: int, gender: str, exclude_allergens=()) -> list[Recommendation]:
+    """カテゴリごとに最もスコアの高い1品を返す（CATEGORIES の順）。
+    アレルゲンを含む品は候補から外し、候補が残らないカテゴリは結果に含めない。"""
     _, weights = age_group(age)
     weights = dict(weights)
     for tag, point in GENDER_WEIGHTS.get(gender, {}).items():
@@ -69,7 +71,9 @@ def recommend(age: int, gender: str) -> list[Recommendation]:
 
     results = []
     for category in CATEGORIES:
-        candidates = [item for item in items_in(category) if is_allowed(item, age)]
+        candidates = [item for item in items_in(category, exclude_allergens) if is_allowed(item, age)]
+        if not candidates:
+            continue
         # 同点ならメニュー順で先のものを選ぶ（max は最初の最大値を返す）
         best = max(candidates, key=lambda item: _score(item, weights))
         results.append(Recommendation(best, _score(best, weights), _reason(best, weights)))
@@ -84,5 +88,5 @@ def _reason(item: MenuItem, weights: dict) -> str:
     matched = sorted((tag for tag in item.tags if weights.get(tag, 0) > 0 and tag in TAG_REASONS),
                      key=lambda tag: -weights[tag])
     if not matched:
-        return "当店の定番メニュー"
+        return "当店の定番"
     return "・".join(TAG_REASONS[tag] for tag in matched[:2])

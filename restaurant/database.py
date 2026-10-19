@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS recommendation_logs (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     age          INTEGER NOT NULL,
     gender       TEXT    NOT NULL,
+    allergens    TEXT    NOT NULL DEFAULT '',
     menu_ids     TEXT    NOT NULL,
     requested_at TEXT    NOT NULL
 );
@@ -43,6 +44,15 @@ class Database:
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.executescript(SCHEMA)
+        self._migrate()
+
+    def _migrate(self):
+        # アレルギー対応前に作られた DB には allergens 列がないので追加する
+        columns = {row["name"] for row in self.conn.execute("PRAGMA table_info(recommendation_logs)")}
+        if "allergens" not in columns:
+            with self.conn:
+                self.conn.execute(
+                    "ALTER TABLE recommendation_logs ADD COLUMN allergens TEXT NOT NULL DEFAULT ''")
 
     def close(self):
         self.conn.close()
@@ -98,8 +108,8 @@ class Database:
                WHERE order_id = ? AND status = 'ordered' ORDER BY id""", (order_id,)).fetchall()
 
     # ---- recommendation_logs ----
-    def log_recommendation(self, age: int, gender: str, menu_ids: str, now: str):
+    def log_recommendation(self, age: int, gender: str, allergens: str, menu_ids: str, now: str):
         with self.conn:
             self.conn.execute(
-                """INSERT INTO recommendation_logs (age, gender, menu_ids, requested_at)
-                   VALUES (?, ?, ?, ?)""", (age, gender, menu_ids, now))
+                """INSERT INTO recommendation_logs (age, gender, allergens, menu_ids, requested_at)
+                   VALUES (?, ?, ?, ?, ?)""", (age, gender, allergens, menu_ids, now))

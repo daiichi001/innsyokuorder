@@ -6,7 +6,7 @@ from datetime import datetime
 
 from .config import QUANTITY_MAX, QUANTITY_MIN
 from .database import Database
-from .menu import get_item
+from .menu import ALLERGENS, get_item
 from .recommend import Recommendation, recommend
 
 
@@ -84,7 +84,8 @@ class OrderService:
     def history(self, limit: int = 100):
         return self.db.paid_orders(limit)
 
-    def recommend(self, age: int, gender: str) -> list:
-        results: list[Recommendation] = recommend(age, gender)
-        self.db.log_recommendation(age, gender, ",".join(r.item.id for r in results), _now())
+    def recommend(self, age: int, gender: str, exclude_allergens=()) -> list:
+        results: list[Recommendation] = recommend(age, gender, exclude_allergens)
+        allergens = ",".join(a for a in ALLERGENS if a in set(exclude_allergens))
+        self.db.log_recommendation(age, gender, allergens, ",".join(r.item.id for r in results), _now())
         return results
