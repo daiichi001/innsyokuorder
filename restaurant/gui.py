@@ -196,7 +196,7 @@ class OrderApp(tk.Frame):
     def _build_menu_panel(self, parent):
         frame = tk.Frame(parent, bg=PAPER)
         frame.pack(fill="both", expand=True)
-        section_title(frame, "お品書き", "握りは二貫・価格は税込")
+        section_title(frame, "お品書き", "握りは一皿二貫（一貫のものは説明に記載）・価格は税込")
 
         CategoryTabs(frame, (ALL_CATEGORIES, *CATEGORIES), self.category_var,
                      self.show_category).pack(fill="x", pady=(0, 8))
