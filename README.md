@@ -20,8 +20,8 @@ Python の標準ライブラリ（tkinter / sqlite3）だけで動くので、**
 ### 手順
 
 ```bash
-git clone <このリポジトリのURL>
-cd restaurant-order-system
+git clone https://github.com/daiichi001/innsyokuorder.git
+cd innsyokuorder
 python main.py
 ```
 
@@ -75,7 +75,7 @@ python -m unittest -v
 ### ディレクトリ構成
 
 ```
-restaurant-order-system/
+innsyokuorder/
 ├── main.py                  # 起動スクリプト（DB接続 → 画面起動）
 ├── restaurant/
 │   ├── config.py            # 店名・DBパス・入力範囲などの設定値
