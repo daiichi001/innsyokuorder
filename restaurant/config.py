@@ -4,8 +4,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-STORE_NAME = "寿司処 神戸みなと"
-STORE_CATCHPHRASE = "瀬戸内の旬を、ひと皿ずつ。"
+STORE_NAME = "寿司処 神戸みなと"  # 半角スペースの前は小さく表示される
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
